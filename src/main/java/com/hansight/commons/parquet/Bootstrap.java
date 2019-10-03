@@ -56,8 +56,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Name("parquet-generator-boot")
 @Summary("Bootstrap Parquet Generator")
-@Description("EXAMPLES:\n" + "  java -jar parquet-generator.jar --target-es 172.16.150.60:9200\n"
-        + "  java -jar parquet-generator.jar --version\n")
+@Description("EXAMPLES:\n" + "  java -jar parquet-generator-jar-with-dependencies.jar --target-es 172.16.150.60:9200\n"
+        + "  java -jar parquet-generator-jar-with-dependencies.jar --help\n")
 public class Bootstrap {
     private static final String DEFAULT_ES_IP = "127.0.0.1";
     private static final int DEFAULT_ES_HTTP_PORT = 9200;

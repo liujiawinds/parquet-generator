@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hansight.commons.parquet.convert;
+package com.hansight.commons.parquet.decode;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;

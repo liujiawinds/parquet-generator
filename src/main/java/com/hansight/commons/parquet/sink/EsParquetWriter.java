@@ -1,7 +1,7 @@
 package com.hansight.commons.parquet.sink;
 
 import com.hansight.commons.parquet.Bootstrap;
-import com.hansight.commons.parquet.convert.ExtendedJsonDecoder;
+import com.hansight.commons.parquet.decode.ExtendedJsonDecoder;
 import com.hansight.ueba.commons.tools.elasticsearch.ElasticsearchConnection;
 import com.taobao.arthas.common.AnsiLog;
 

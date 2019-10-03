@@ -145,6 +145,7 @@
     </dependencies>
 
     <build>
+        <finalName>parquet-generator</finalName>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -205,6 +206,28 @@
                         <phase>verify</phase>
                         <goals>
                             <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.hansight.commons.parquet.Bootstrap</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
