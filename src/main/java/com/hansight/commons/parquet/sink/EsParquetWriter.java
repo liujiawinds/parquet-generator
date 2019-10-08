@@ -29,7 +29,7 @@ import parquet.hadoop.ParquetWriter;
 /**
  * Created by liujia on 2019/10/2.
  */
-public class EsParquetWriter implements Runnable {
+public class EsParquetWriter {
 
     private String index;
     private String eventType;
@@ -59,8 +59,7 @@ public class EsParquetWriter implements Runnable {
         }
     }
 
-    @Override
-    public void run() {
+    public Integer call() {
         int counter = 0;
         try (ElasticsearchConnection connection = new ElasticsearchConnection()) {
             connection.connect(elasticHost, elasticPort, "http");
@@ -76,10 +75,10 @@ public class EsParquetWriter implements Runnable {
                         Decoder decoder = new ExtendedJsonDecoder(schema, hit.getSourceAsString());
                         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
                         writer.write(datumReader.read(null, decoder));
+                        counter++;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    counter++;
                 }
                 searchResponse = connection.client().searchScroll(new SearchScrollRequest(searchResponse.getScrollId())
                         .scroll(new Scroll(TimeValue.timeValueMinutes(3))));
@@ -91,9 +90,10 @@ public class EsParquetWriter implements Runnable {
             try {
                 writer.close();
             } catch (IOException e) {
-                AnsiLog.error("parquet writer can't close, maybe data loss.");
+                AnsiLog.error("parquet writer can't be closed, and data loss may occur.");
             }
         }
-        AnsiLog.info("data pulling for index {} has been completed, total record: {}", index, counter);
+        AnsiLog.info("data pulling for index {} has been completed, total record count: {}", index, counter);
+        return counter;
     }
 }

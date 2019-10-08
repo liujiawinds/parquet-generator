@@ -24,6 +24,7 @@ import com.taobao.middleware.cli.annotations.Option;
 import com.taobao.middleware.cli.annotations.Summary;
 
 import org.apache.avro.Schema;
+import org.apache.commons.io.FileUtils;
 import org.apache.lucene.util.NamedThreadFactory;
 import org.codehaus.jackson.node.NullNode;
 import org.elasticsearch.action.search.SearchRequest;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -155,7 +157,7 @@ public class Bootstrap {
             if (count == 0) {
                 System.out.println("* [" + count + "]: " + entry.getKey() + "  || doc count:" + entry.getValue());
             } else {
-                System.out.println("  [" + count + "]: " + entry.getKey() + "  || dco count:" + entry.getValue());
+                System.out.println("  [" + count + "]: " + entry.getKey() + "  || doc count:" + entry.getValue());
             }
             count++;
         }
@@ -179,9 +181,10 @@ public class Bootstrap {
 
     public static void saveSchema(String ruleName, String schema) throws IOException {
         File file = new File(ruleName, "schema.asvc");
-        if (!file.getParentFile().exists()) {
-            file.getParentFile().mkdirs();
+        if (file.getParentFile().exists()) {
+            FileUtils.forceDelete(file.getParentFile());
         }
+        file.getParentFile().mkdirs();
         if (!file.exists()) {
             file.createNewFile();
         }
@@ -306,18 +309,29 @@ public class Bootstrap {
         AnsiLog.info("final schema: {}", finalSchema.toString());
         saveSchema(ruleName, finalSchema.toString());
         AnsiLog.info("begin to pull data ....");
-        List<CompletableFuture> futures = new ArrayList<>();
+        List<CompletableFuture<Integer>> futures = new ArrayList<>();
         for (String index : indices) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(new EsParquetWriter(index, ruleName, finalSchema, bootstrap), executorService);
+            CompletableFuture<Integer> future = CompletableFuture.supplyAsync(() -> new EsParquetWriter(index, ruleName, finalSchema, bootstrap).call(), executorService);
             futures.add(future);
         }
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{})).thenRun(() -> {
-           AnsiLog.info("All data has been convert to Parquet file.");
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{})).thenAccept((v) -> {
+            Integer totalWriteCount = futures.stream()
+                    .map(f -> {
+                        try {
+                            return f.get();
+                        } catch (InterruptedException | ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                        return 0;
+                    })
+                    .reduce((v1, v2) -> v1 + v2)
+                    .get();
+            AnsiLog.info("All data has been convert to Parquet file. total write record count: {}", totalWriteCount);
         }).exceptionally(ex -> {
             ex.printStackTrace();
             return null;
-        });
+        }).join();
 
         System.exit(0);
     }
