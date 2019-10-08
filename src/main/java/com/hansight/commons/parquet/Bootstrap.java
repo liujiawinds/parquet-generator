@@ -306,9 +306,9 @@ public class Bootstrap {
         }
         // enable null default value
         Schema finalSchema = enableDefaultValue(jsonSchema);
-        AnsiLog.info("final schema: {}", finalSchema.toString());
+        // AnsiLog.info("final schema: {}", finalSchema.toString());
         saveSchema(ruleName, finalSchema.toString());
-        AnsiLog.info("begin to pull data ....");
+        AnsiLog.info("Begin pulling data ....");
         List<CompletableFuture<Integer>> futures = new ArrayList<>();
         for (String index : indices) {
             CompletableFuture<Integer> future = CompletableFuture.supplyAsync(() -> new EsParquetWriter(index, ruleName, finalSchema, bootstrap).call(), executorService);
@@ -327,7 +327,7 @@ public class Bootstrap {
                     })
                     .reduce((v1, v2) -> v1 + v2)
                     .get();
-            AnsiLog.info("All data has been convert to Parquet file. total write record count: {}", totalWriteCount);
+            AnsiLog.info("All data has been converted to Parquet file. total write record count: {}", totalWriteCount);
         }).exceptionally(ex -> {
             ex.printStackTrace();
             return null;
